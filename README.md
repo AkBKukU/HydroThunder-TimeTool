@@ -29,6 +29,20 @@ You can then image the drive back but it would be better to only write the score
 
 TODO - provide example
 
+## "CMOS" Data Structure
+The data area that contains the high score table towards the end of the HDD in an unformatted area is internally referred to as "cmos" in _HYDRO.EXE_, it also contains other data that has not yet been decoded. This data may also be stored in the PC motherboard battery backed CMOS memory and flushed periodically to the non-volatile HDD, further reverse engineering required to determine this.
+
+| Offset  | Internal Game Name         | Decoded      | CSV Export | Write back |
+|---------|----------------------------|--------------|------------|------------|
+|         | _TBD_                      |              |            |            |
+| 62B300h | \_OperatorSettings         | No           | No         | No         |
+| 622640h | \_Hi_Score\_Table          | **Yes**      | **Yes**    | Partial    |
+| 622A50h | \_Hud\_SplitTimes          | **Yes**      | No         | No         |
+| 6221FCh | \_Diagnos\_DiagnosticInfo  | No           | No         | No         |
+| 620C18h | \_Audits\_Data             | No           | No         | No         |
+| 62091Ch | \_AiRabbit\_WinHistoryData | No           | No         | No         |
+|         | _TBD_                      |              |            |            |
+
 ## Roadmap
  - More documentation of hidden data
  - Provide exmaples of data
