@@ -1,0 +1,27 @@
+
+Start Continous data modification group:
+
+CF-Data-HS.img:
+Copy of CF-SN33-free.img and then set a high score for the first time on Ship Graveyard
+
+CF-Data-HS-LS.img
+a bad run on Ship Graveyard to set second score without adjusting split times.
+
+CF-Data-Trackdiff.img:
+Changed track difficulty of Ship Graveyard to 41
+
+CF-Data-EnNet.img:
+Enabled networking
+
+CF-Data-NetID.img:
+Changed Network ID from 1 to 3
+
+CF-Data-NetID-Edit.img:
+Externally changed Network ID from 3 to 2 aand wrote back to disk
+!!!THIS WORKED!!!
+
+CF-Data-AIDiff.img:
+Increased Ship Graveyard AI difficulty to 51
+
+CF-Data-AIDiff-Big.img:
+Changed multiple track difficutlties to add up to 256
