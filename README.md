@@ -29,21 +29,86 @@ You can then image the drive back but it would be better to only write the score
 
 TODO - provide example
 
-## "CMOS" Data Structure
-The data area that contains the high score table towards the end of the HDD in an unformatted area is internally referred to as "cmos" in _HYDRO.EXE_, it also contains other data that has not yet been decoded. This data may also be stored in the PC motherboard battery backed CMOS memory and flushed periodically to the non-volatile HDD, further reverse engineering required to determine this.
+## "CMOS" Data area details
+The data area that contains the high score table is towards the end of the HDD in an unformatted area, is internally referred to as "cmos" in _HYDRO.EXE_ (1.00d). This CMOS area also contains other data that has not yet been decoded. 
 
-| Offset  | Internal Game Name         | Decoded      | CSV Export | Write back |
+This data (or a checksum of it) may also be stored in the PC motherboard battery backed CMOS memory and flushed periodically to the non-volatile HDD, further reverse engineering required to determine this.
+
+### Known CMOS data pointers from decompiling _HYDRO.EXE_ (1.00d) and current script support
+| Offset  | Internal Game Name         | Decoded      | CSV export | Write back |
 |---------|----------------------------|--------------|------------|------------|
-|         | _TBD_                      |              |            |            |
 | 62B300h | \_OperatorSettings         | No           | No         | No         |
 | 622640h | \_Hi_Score\_Table          | **Yes**      | **Yes**    | Partial    |
 | 622A50h | \_Hud\_SplitTimes          | **Yes**      | No         | No         |
 | 6221FCh | \_Diagnos\_DiagnosticInfo  | No           | No         | No         |
 | 620C18h | \_Audits\_Data             | No           | No         | No         |
 | 62091Ch | \_AiRabbit\_WinHistoryData | No           | No         | No         |
-|         | _TBD_                      |              |            |            |
+
+### Data structure maps
+
+#### CMOS area structure (1.00d)
+
+```
+Offset (1.00d)| Description 
+--------------|--------------------------------------------------------------------------------------------------------
+0000h         | Start of CMOS area (01 00 00 00 98 BA DC FE 01)
+0000h - 0063h | Unknown, some changes between 1.00d & 1.01b, suspect settings
+0064h - 0097h | Track difficultly
+0098h - 00CBh | AI difficultly
+00CCh - 016Fh | Unknown, significant change between versions (extra 11 bytes in 1.01b offseting all later data!)
+0170h - 057Fh | Hi_Score_Table
+0580h - 0583h | Unknown DWORD, no change between versions, maybe just a terminator (41 00 00 00)
+0584h - 0687h | Hud_SplitTimes
+0688h - 0733h | Unknown, changes between versions
+0734h - 0B1Dh | Unknown block with repeating structure every 108 bytes, much more data in 1.01b
+0B1Eh - 0C43h | Empty space (0x00 filled)
+0C44h - 0FC0h | Unknown block with repeating structure every 108 bytes, much more data in 1.01b
+0FC1h - 146Fh | Unknown, changes between versions
+        146Fh | End of CMOS area
+```
+
+### Track and AI difficultly
+##### Entry structure
+```
+| diff : uint8 | null (0x00)  | null (0x00)  | null (0x00)  |
+|--------------|--------------|--------------|--------------|
+| byte 0       | byte 1       | byte 2       | byte 3       |
+```
+
+### `Hi_Score_Table`
+##### Entry structure
+```
+| boat : byte |           initials : char[3]            |                seconds : single float                 |
+|-------------|-----------------------------------------|-------------------------------------------------------|
+| byte 0      | byte 1      | byte 2      | byte 3      | byte 4      | byte 5      | byte 6      | byte 7      |
+```
+##### Table structure
+```
+|     'Ship Graveyard' high scores     |       'Lost Island' high scores      | ... |          'LOOP3' high scores         |
+|    1st   |    2nd   | ... |   10th   |    1st   |    2nd   | ... |   10th   | ... |    1st   |    2nd   | ... |   10th   |
+|0|123|4567|0|123|4567| ... |0|123|4567|0|123|4567|0|123|4567| ... |0|123|4567| ... |0|123|4567|0|123|4567| ... |0|123|4567|
+```
+
+
+### `Hud_SplitTimes`
+##### Entry structure
+```
+|                seconds : single float                 |
+|-------------------------------------------------------|
+| byte 0      | byte 1      | byte 2      | byte 3      |
+```
+##### Table structure
+```
+|'Ship Graveyard' split times |  'Lost Island' split times  | ... |     'LOOP3' split times     |
+|Split 1|Split 2| ... |Split 5|Split 1|Split 2| ... |Split 5| ... |Split 1|Split 2| ... |Split 5|
+| 0123  | 0123  | ... | 0123  | 0123  | 0123  | ... | 0123  | ... | 0123  | 0123  | ... | 0123  |
+```
+### Special case notes
+* The CMOS data contains data for 2 extra inaccessible tracks 'TEST' and 'LOOP3'.
+* Tracks that have less than 5 split check points just leave the extra unused ones with their default time ~225 s (85 AB 61 43).
+
 
 ## Roadmap
- - More documentation of hidden data
- - Provide exmaples of data
- - Determine how data validity check is done and impliment it for modified scores
+- More documentation of hidden data
+- Provide exmaples of data
+- Determine how data validity check is done and impliment it for modified scores
