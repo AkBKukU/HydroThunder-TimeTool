@@ -63,7 +63,8 @@ struct RawData {
     
     // Checksum is at least partially calculated by adding bytes together
     // Has not behaved as expected for track times, may not be single value
-    u32 Checksm;
+    u16 Checksum_1;
+    u16 Checksum_2;
     
     u8 Unknown_static_4; // Always 01
     padding[3];
@@ -98,4 +99,4 @@ struct RawData {
 //bool setting_FreePlay @ 0x75BE6B3;
 
 
-RawData rawdata_at_0xC06CE800 @ 0xC06CE800;
+RawData rawdata_at_0x75BE663 @ 0x75BE663;

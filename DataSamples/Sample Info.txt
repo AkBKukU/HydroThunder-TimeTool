@@ -32,3 +32,82 @@ Increased Ship Graveyard AI difficulty to 51
 
 CF-Data-AIDiff-Big.img:
 Changed multiple track difficutlties to add up to 256
+
+CF-Data-Set-Metric.img:
+Setting METRIC - ON
+
+CF-Data-Set-Free1st.img:
+Setting FREE RACE FOR 1st - OFF
+
+CF-Data-Set-FreeMulti.img:
+Setting WIN MULTI-PLAYER FOR FREE RACE - 2
+Can be OFF, 2, 3, 4
+
+CF-Data-Set-AllBoats.img:
+Setting ENABLE ALL BOATS - ON
+
+CF-Data-Set-AllTracks.img:
+Setting UNLOCK ALL TRACKS - ON
+
+CF-Data-Set-TrackOne.img:
+Setting UNLOCK ALL TRACKS - OFF
+Setting RACES FOR BONUS 1 - 4
+Can be 1-8
+
+CF-Data-Set-TrackTwo.img:
+Setting RACES FOR BONUS 2 - 3
+Can be 1-8
+
+Note: Skipping CABINET TYPE setting since impact is unknown
+
+
+CF-Data-Set-P-On.img:
+Setting CUSTOM PRICE - ON
+
+CF-Data-Set-P-All.img:
+Range 0-60
+Setting LEFT UNITS - 1 to 2
+Setting RIGHT UNITS - 1 to 3
+Setting CENTER UNITS - 0 to 4
+Setting EXTRA UNITS - 0 to 5
+Setting DVB UNITS - 4 to 6
+
+Setting UNITS PER CREDIT - 1 to 7
+Setting UNITS PER BONUS - 1 to 8
+
+Setting MIN UNITS - 0 to 9
+
+Setting CREDITS TO START - 2 to 10
+Setting CREDITS TO CONTINUE - 2 to 11
+
+Setting COINS PER BILL - 4 to 12
+
+Setting SHOW CREDIT FRACTIONS - ON to OFF
+
+Setting LEFT COUNT - 1 to 13
+Setting RIGHT COUNT - 1 to 14
+Setting CENTER COUNT - 0 to 15
+Setting EXTRA COUNT - 0 to 16
+Setting DVB COUNT - 4 to 17
+
+Setting CURRENCY - DOLLAR to POUND
+Can be set to DOLLAR, POUND, GUILDER, SHILLING, F, KR, MARKKA, DM, LIRE, FORINT, HFI, PESETA, Y
+
+
+CF-Data-Set-P-Standard.img:
+Setting CUSTOM PRICE - OFF
+Setting SELECT STANDARD PRICING > NORTH AMERICA > USA - USA 10 to USA 1
+
+CF-Data-Set-Force.img:
+Setting USE FORCE FEEDBACK - ON to OFF
+Setting FORCE FEEDBACK ADJUSTMENT  - 60% to 29%
+
+CF-Data-Set-SelTime.img:
+Can be set from 10-60
+Setting TRACK SELECT TIME - 15 to 30
+Setting BOAT SELECT TIME - 15 to 31
+Setting HIGH SELECT TIME - 20 to 32
+Setting CONTINUE TIME - 17 to 33
+
+
+
