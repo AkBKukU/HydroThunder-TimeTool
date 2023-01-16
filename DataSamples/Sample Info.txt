@@ -110,4 +110,93 @@ Setting HIGH SELECT TIME - 20 to 32
 Setting CONTINUE TIME - 17 to 33
 
 
+CF-Data-Set-SelTime-Track.img:
+Can be set from 10-60
+Setting TRACK SELECT TIME - 30 to 10
+
+CF-Data-Set-SelTime-BOAT.img:
+Can be set from 10-60
+Setting BOAT SELECT TIME - 31 to 11
+
+CF-Data-Set-SelTime-HIGH.img:
+Can be set from 10-60
+Setting HIGH SELECT TIME - 32 to 12
+
+CF-Data-Set-SelTime-CONTINUE.img:
+Can be set from 10-60
+Setting CONTINUE TIME - 33 to 13
+
+CF-Data-Set-FreeLimit.img:
+Setting FREE RACE LIMITER - ON to OFF
+
+CF-Data-Set-FreeLimit-per.img:
+Setting FREE RACE LIMIT - 13% to 14%
+
+CF-Data-Set-Wait-Op.img:
+Setting WAIT FOR OPERATOR - OFF to ON
+
+CF-Data-Set-datetime.img:
+Setting all time settings to something different
+Note: Did not result in any changes to the drive
+
+CF-Data-Set-Vol-Master.img:
+Setting MASTER VOLUME - 41 to 42
+
+CF-Data-Set-Vol-Rumble.img:
+Setting SEAT RUMBLE - 80 to 79
+Stored as four byte float
+
+CF-Data-Set-Vol-AttractEn.img:
+Setting ATTRACT MUSIC - ON to OFF
+
+
+CF-Data-Set-Vol-AttractVol.img:
+Setting ATTRACT MUSIC - OFF to ON
+Setting ATTRACT VOLUME - 50 to 51
+
+
+CF-Data-Set-Vol-Calibration.img:
+Before:
+Wheel   : Range   0 127 255
+Throttle: Range   0 127 255
+After:
+Wheel   : Range  10 136 250
+Throttle: Range  36  61 232
+
+CF-Data-Race-1.img:
+Ship Graveyard with Miss Behave as "RA "
+
+CF-Data-Race-2.img:
+Ship Graveyard with Banshee as "RA2"
+
+CF-Data-Race-3.img:
+Ship Graveyard with Tidal_Blade as "RA3"
+
+CF-Data-Race-4.img:
+Ship Graveyard with Damn_the_Torpedoes as "RA4"
+
+CF-Data-Race-5.img:
+Ship Graveyard with Cutthroat as "RA5"
+
+CF-Data-Race-6.img:
+Ship Graveyard with Cutthroat as "RA6"
+Yes, I used the same boat twice
+
+CF-Data-Race-7.img:
+Ship Graveyard with Razorback as "RA7"
+
+CF-Data-Race-8.img:
+Ship Graveyard with Thresher as "RA7"
+Yes, the intials are weren't changed
+
+CF-Data-Race-9.img:
+Ship Graveyard with Midway as "RA9"
+
+CF-Data-Race-slow.img:
+Ship Graveyard with Midway too slow to set high score
+
+
+
+
+
 
