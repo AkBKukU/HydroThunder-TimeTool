@@ -89,34 +89,34 @@ struct RawData {
 
 
     SettingsTrack settings_track;
-       
+
     u32 FreeLimit_En;
     u32 AllBoats;
     u32 volume_AttractVol; // 0-255 mapped to 0-100 percentage
-    
+
     padding[4];
-    
+
     float throttle_min;
     float throttle_max ;
     float throttle_mid;
-    
+
     float wheel_min ;
     float wheel_max;
     float wheel_mid;
-    
+
     // Force Feedback
     u32 Force_On; // Inverted
     u32 Force_Adjustment; // 0-255 mapped to 0-100 percentage
-    
+
     float unknown_2; // Set to 0.5
-    
+
     float volume_rumble;
-    
+
     padding[4];
-    
+
     // Pricing options with number inputs can be 0-60
     u32 Pricing_CustomOn;
-    
+
     u32 Pricing_LeftUnits ;
     u32 Pricing_RightUnits ;
     u32 Pricing_CenterUnits;
@@ -125,18 +125,18 @@ struct RawData {
     ;
     u32 Pricing_UnitsCredit;
     u32 Pricing_UnitsBonus ;
-    
+
     u32 Pricing_MineUnits;
-    
+
     u32 Pricing_CreditsStart ;
     u32 Pricing_CreditsContinue;
-    
+
     u32 unknown_3; // Set to 32
-    
+
     u32 Pricing_CoinsBill ;
-    
+
     u32 Pricing_ShowFractions ;
-    
+
     u32 Pricing_LeftCount ;
     u32 Pricing_RightCount ;
     u32 Pricing_CenterCount;
@@ -146,9 +146,9 @@ struct RawData {
 
     padding[12];
     u32 setting_FreeMulti;// Options: Off(0), 2,3,4
-    
+
     padding[4];
-    
+
     u32 setting_Net_WaitOp; // inverted
     u32 setting_FreeLimit_Per_copy; // Not sure, changed when value changed
 
@@ -165,3 +165,5 @@ struct RawData {
 
 
 RawData rawdata_at_0x75BE663 @ 0x75BE663;
+
+RawData rawdata_at_0x75EE660 @ 0x75EE663;
