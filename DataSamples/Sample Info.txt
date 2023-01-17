@@ -196,7 +196,9 @@ CF-Data-Race-slow.img:
 Ship Graveyard with Midway too slow to set high score
 
 
-
+CF-Data-Set-Cabinet.img:
+Changed Caninet type from 25" to 39"
+Didn't seem to do anything.
 
 
 
