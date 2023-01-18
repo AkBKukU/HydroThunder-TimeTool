@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-# This script is used to confirm the checksum variables found work as expected without the complexity of the other scripts (math not fully verified)
+# Use this script to quickly compare checksums stored in an image and the SUM32 checksum of the actual data, useful for calculating a new checksum after changing the data
+# 
+# Call with `HTchecksumManualCheck.py` or `HTchecksumManualCheck.py './DataSamples/Pay.img'`
 
 import sys
 import os
@@ -10,41 +12,43 @@ import math
 
 from HTchecksumUtils import *
 
-cmos_image_path = './DataSamples/SN33-Real.img'
+if len(sys.argv) > 1:
+	image_path = sys.argv[1]
+else:
+	image_path = './DataSamples/SN33-Real.img'
 
-cmos_img_offset = 0x75BE663		# Default offset for CF card first occourance
-#cmos_img_offset = 0x75EE663	# Default offset for CF card second occurrence
-
-#cmos_area_length = 0x147A		# Measured length of one of the duplicated cmos data section
-cmos_area_length = 0x1500		# Measured length plus some padding
-#cmos_area_length = 0x0F		# DEBUG: Force small problem space
-
-checksum_offset_skip = 0x17
-data_start_offset = 0x75BE660 + checksum_offset_skip
-
-checksum_seed = 0xFEDCBA94 # Result of of -0x0123456b
+cmos_base_offsets 		= [0x75BE663, 0x75EE663]	# Address of first byte of the CMOS 'header' [01 00 00 00 98 ba dc fe]
+checksum_rel_offset 	= 0xC						# Relative bytes between 'cmos_base_offsets' and the first byte of the checksum
+area_rel_offset			= 0x14						# Relative bytes between 'cmos_base_offsets' and the first byte of the area being checksumed
+area_length 			= 0x1500					# Number of bytes included in the checksum (must be modulo of 4 due to SUM32 4 byte width)
+checksum_seed 			= 0xFEDCBA94				# Checksum seed
 
 # ==============================================================================
 
-print()
-
-print("Checking cmos area has correct offset in .img files")
-verifyImageHeaders([cmos_image_path], cmos_img_offset)
-
-print()
-
-print("Checksum from image : {}".format(getChecksum('SUM32', cmos_image_path, 0x75BE66F).hex(' ')))
+print("\nChecking supplied offsets point to start of CMOS areas in image:")
+verifyImageHeaders([image_path], cmos_base_offsets[0])
+verifyImageHeaders([image_path], cmos_base_offsets[1])
 
 print()
+print("                                  |     Old      |    Newly     |                       ")
+print("                                  |    Stored    |  Calculated  |                       ")
+print("                                  |   Checksum   |   Checksum   |  Checksum Area Span   ")
+print("----------------------------------|--------------|--------------|-----------------------")
 
-algorithm_list = ['SUM8', 'SUM16', 'SUM32']
-checksum_lengths = [cmos_area_length, cmos_area_length, cmos_area_length]
+checksums_old = []
+checksums_new = []
 
-for i in range(len(algorithm_list)):
-	checksum, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(algorithm_list[i], 'little', cmos_image_path, 0x75BE677, checksum_lengths[i], checksum_seed)
-	print("{:5s}  {:12s}  {:10s} → {:10s}  {:5d}".format(algorithm_list[i], checksum.hex(' '), checksum_start_offset.to_bytes(4,'big').hex(), checksum_end_offset.to_bytes(4,'big').hex(), num_sums))
+# For each CMOS block (there's two)
+for this_cmos_copy in range(len(cmos_base_offsets)):
 
-
+	# Read old checksum from image at current CMOS block
+	checksum_abs_offset = cmos_base_offsets[this_cmos_copy] + checksum_rel_offset
+	checksums_old.append(readChecksum(image_path, checksum_abs_offset))
+	
+	# Calculate new checksum from image at current CMOS block
+	area_checksum_result, area_start_offset, area_end_offset, num_sums, last_byte = calculateChecksum(image_path, cmos_base_offsets[this_cmos_copy] + area_rel_offset)
+	checksums_new.append(area_checksum_result)
+		
+	print("CMOS area #{:1d} Checksum @ {} | {:12s} | {:12s} | {} → {} ".format(this_cmos_copy, hex(checksum_abs_offset), checksums_old[this_cmos_copy].hex(' '), checksums_new[this_cmos_copy].hex(' '), hex(area_start_offset), hex(area_end_offset)))
+	
 print()
-
-# Output from checksum must match "Checksum from image" output

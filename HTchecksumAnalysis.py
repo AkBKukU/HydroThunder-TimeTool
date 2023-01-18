@@ -59,16 +59,16 @@ cmos_image_paths_consistent = []
 for cmos_image_idx in range(len(cmos_image_paths)):
 	print("\n\n {:3d} [{}]".format(cmos_image_idx, cmos_image_paths[cmos_image_idx]))
 
-	first_checksums.append(getChecksum('SUM32', cmos_image_paths[cmos_image_idx], checksum_offsets[0]))
-	second_checksums.append(getChecksum('SUM32', cmos_image_paths[cmos_image_idx], checksum_offsets[1]))
+	first_checksums.append(readChecksum(cmos_image_paths[cmos_image_idx], checksum_offsets[0]))
+	second_checksums.append(readChecksum(cmos_image_paths[cmos_image_idx], checksum_offsets[1]))
 		
 	first_checksum_int = int.from_bytes(first_checksums[cmos_image_idx], checksum_endian, signed=False)
 	second_checksum_int = int.from_bytes(second_checksums[cmos_image_idx], checksum_endian, signed=False)
 	diff_checksum_int = second_checksum_int - first_checksum_int
 	diff_checksums.append(abs(diff_checksum_int).to_bytes(4, checksum_endian, signed=False))
 	
-	first_cmos_checksum,_,_,_,_ = calculateChecksum('SUM32', checksum_endian, cmos_image_paths[cmos_image_idx], cmos_area_offsets[0], cmos_area_length, checksum_seed)
-	second_cmos_checksum,_,_,_,_ = calculateChecksum('SUM32', checksum_endian, cmos_image_paths[cmos_image_idx], cmos_area_offsets[1], cmos_area_length, checksum_seed)
+	first_cmos_checksum,_,_,_,_ = calculateChecksum(cmos_image_paths[cmos_image_idx], cmos_area_offsets[0])
+	second_cmos_checksum,_,_,_,_ = calculateChecksum(cmos_image_paths[cmos_image_idx], cmos_area_offsets[1])
 	
 	first_cmos_checksum_int = int.from_bytes(first_cmos_checksum, checksum_endian, signed=False)
 	second_cmos_checksum_int = int.from_bytes(second_cmos_checksum, checksum_endian, signed=False)

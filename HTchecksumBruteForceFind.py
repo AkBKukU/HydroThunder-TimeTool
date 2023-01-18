@@ -101,7 +101,7 @@ print()
 num_comparison = 0
 progress_display_last = time.monotonic()
 
-suspected_checksum_bytes = getChecksum(checksum_algorithm, cmos_image_paths[0], suspected_checksum_offset)
+suspected_checksum_bytes = readChecksum(cmos_image_paths[0], suspected_checksum_offset, checksum_algorithm)
 # checksum_p_bytes = bytearray(b'\x00\x00\x00\x9c')			# DEBUG: Force user defined checksum to check comparison works
 print("About to search for continuous areas in [" + cmos_image_paths[0] + "] CMOS data with a " + checksum_algorithm + " checksum matching : [" + suspected_checksum_bytes.hex(' ') + "]")
 
@@ -122,7 +122,7 @@ with open(this_image_path, "rb") as f_p:
 		for this_checksum_length in range(checksum_byte_width, cmos_area_length, checksum_byte_width):
 					
 			# Call calculateChecksum() to do the checksum (this doesn't add 1 byte at a time but redoes the entire thing every loop, it's much slower but easier to work with)
-			checksum_bytes, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(checksum_algorithm, checksum_endian, this_image_path, this_start_offset, this_checksum_length, checksum_seed)
+			checksum_bytes, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(this_image_path, this_start_offset, this_checksum_length, checksum_algorithm, checksum_endian, checksum_seed)
 				
 			# Compare if checksumed area results in the same as this image's suspected checksum bytes
 			if checksum_bytes == suspected_checksum_bytes:
@@ -132,9 +132,9 @@ with open(this_image_path, "rb") as f_p:
 				
 				# Check if this checksum works in other image files, if so pause, if no keep searching
 				for other_image_path_index in range(1, len(cmos_image_paths)):
-					other_checksum_bytes, _, _, _, _ = calculateChecksum(checksum_algorithm, checksum_endian, cmos_image_paths[other_image_path_index], this_start_offset, this_checksum_length, checksum_seed)
+					other_checksum_bytes, _, _, _, _ = calculateChecksum(cmos_image_paths[other_image_path_index], this_start_offset, this_checksum_length, checksum_algorithm, checksum_endian, checksum_seed)
 					
-					other_suspected_checksum_bytes = getChecksum(checksum_algorithm, cmos_image_paths[other_image_path_index], suspected_checksum_offset)
+					other_suspected_checksum_bytes = readChecksum(cmos_image_paths[other_image_path_index], suspected_checksum_offset, checksum_algorithm)
 					
 					if other_checksum_bytes == other_suspected_checksum_bytes:
 						print(" | #{:d} {:s}".format(other_image_path_index, other_checksum_bytes.hex(' ')), end='')

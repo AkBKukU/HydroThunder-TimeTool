@@ -24,6 +24,8 @@ checksum_candidate_offset = [0x55BE66F 			# Checksum suspected to be for operato
 							 
 suspected_checksum_offset = checksum_candidate_offset[0]
 
+seed = 0x0
+
 # ==============================================================================
 
 print()
@@ -33,7 +35,7 @@ verifyImageHeaders([cmos_image_path], cmos_img_offset)
 
 print()
 
-print("Checksums from image : {}".format(getChecksum('SUM32', cmos_image_path, 0x75BE66F).hex(' ')))
+print("Checksums from image : {}".format(readChecksum(cmos_image_path, 0x75BE66F).hex(' ')))
 
 print()
 
@@ -46,7 +48,7 @@ length = 0x164
 
 op_sets_checksum = []
 for i in range(len(algorithm_list)):
-	checksum, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(algorithm_list[i], 'little' , cmos_image_path, start, length)
+	checksum, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(cmos_image_path, start, length, algorithm_list[i], 'little', seed)
 	print("{:5s}  {:12s}  {:10s} → {:10s}  {:5d}".format(algorithm_list[i], checksum.hex(' '), checksum_start_offset.to_bytes(4,'big').hex(), checksum_end_offset.to_bytes(4,'big').hex(), num_sums))
 	op_sets_checksum.append(checksum)
 
@@ -57,7 +59,7 @@ length = 0x410
 
 high_score_checksum = []
 for i in range(len(algorithm_list)):
-	checksum, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(algorithm_list[i], 'little' , cmos_image_path, start, length)
+	checksum, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(cmos_image_path, start, length, algorithm_list[i], 'little', seed)
 	print("{:5s}  {:12s}  {:10s} → {:10s}  {:5d}".format(algorithm_list[i], checksum.hex(' '), checksum_start_offset.to_bytes(4,'big').hex(), checksum_end_offset.to_bytes(4,'big').hex(), num_sums))
 	high_score_checksum.append(checksum)
 
@@ -69,7 +71,7 @@ length = 0x104
 
 time_split_checksum = []
 for i in range(len(algorithm_list)):
-	checksum, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(algorithm_list[i], 'little' , cmos_image_path, start, length)
+	checksum, checksum_start_offset, checksum_end_offset, num_sums, last_byte = calculateChecksum(cmos_image_path, start, length, algorithm_list[i], 'little', seed)
 	print("{:5s}  {:12s}  {:10s} → {:10s}  {:5d}".format(algorithm_list[i], checksum.hex(' '), checksum_start_offset.to_bytes(4,'big').hex(), checksum_end_offset.to_bytes(4,'big').hex(), num_sums))
 	time_split_checksum.append(checksum)
 	
