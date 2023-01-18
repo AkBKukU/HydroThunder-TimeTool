@@ -14,18 +14,18 @@ class HTChecksumUtils:
 	version = 0.2
 
 class cmos:
-	base_offsets 		= [0x75BE663, 0x75EE663]
+	base_offsets 		= [0x75BE663, 0x75EE663]									# Offset of the first bit of each CMOS block
 	
 	class header:
-		expected_bytes	= bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe')
-	class area:
-		rel_offset		= 0x14
-		length 			= 0x1500
+		expected_bytes	= bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe')			# Header byte pattern found at the start of each CMOS block
+	class area:																		# Area refering to the space that is used in the checksum
+		rel_offset		= 0x14														# First bit of the area relative to base_offset
+		length 			= 0x1500													# Length of the area checksumed in bytes
 	class checksum:
-		algorithm		= 'SUM32'
-		endian			= 'little'
-		rel_offset 		= 0xC
-		seed 			= 0xFEDCBA94 # Result of of -0x0123456b
+		algorithm		= 'SUM32'													# Checksum algorithm used
+		endian			= 'little'													# Endian that determines how bytes are summed
+		rel_offset 		= 0xC														# First bit of the checksum  relative to base_offset
+		seed 			= 0xFEDCBA94 # Result of of -0x0123456b						# Seed of the checksum algorithm
 	
 
 def verifyImageHeaders(image_path_list, cmos_img_offset = cmos.base_offsets[0]):
