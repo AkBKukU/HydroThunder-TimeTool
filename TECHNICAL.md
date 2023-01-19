@@ -69,7 +69,8 @@ the data does not match the checksum the machine will revert to factory defaults
 and clear audit data. 
 
 To calculate the checksum, first clear the existing checksum from the data. The 
-add up all the values in the data as 32b ints.
+add up all the values in the data as 32b ints. The checksum has a starting value
+of 0xFEDCBA94 the other bytes are added to.
 
 
 
