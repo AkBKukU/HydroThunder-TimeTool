@@ -5,57 +5,166 @@ import os
 import struct
 import datetime
 import csv
+import argparse
 
-filename=sys.argv[1]
+parser = argparse.ArgumentParser(
+    prog = 'Hydro Thunder Time Tool',
+    description = 'Reads and writes data for track times, split times, and'+ 
+    'settings for a Hydro Thunder Arcade machine\'s hard drive.',
+    epilog = 'Hey, you found a secret!')
 
-data_csv=None
-if len(sys.argv) > 2:
-    data_csv=sys.argv[2]
+parser.add_argument('filename', nargs='?')
 
-# Sample file size 4000317440
-data_size=123993699 # measured by checking for 0'ed out portion of drive after loading game on new drive
+# Primary function parameters
+parser.add_argument('-t', '--times',action='store_true',
+                    help='High score times for tracks')
+parser.add_argument('-s', '--splits',action='store_true',
+                    help='Best checkpoint split times for tracks')
+parser.add_argument('-c', '--config',action='store_true',
+                    help='Configuration options and calibration data')
+parser.add_argument('-r', '--read', default=None,
+                    help='Drive or image to read from')
+parser.add_argument('-w', '--write',
+                    help='Write data to provided drive or image')
+parser.add_argument('--block', default=0,choices=[0,1], type=int,
+                    help='Override which data block to read')
+parser.add_argument('--write_raw', default=None,
+                    help="Write raw data block instead of at end of drive")
 
-size=os.path.getsize(filename)
+# Helpful info options
+parser.add_argument('-b', '--boats',action='store_true',
+                    help='List boat names in game\'s stored order')
+parser.add_argument('-m', '--map_names',action='store_true',
+                    help='List track names in game\'s stored order')
+# Run argument parsing
+args = parser.parse_args()
 
-# This offset does not appear to be consistent across machines/versions
-scores_start=[size-333444,size-530052]
-
-boat_LUT= {
-    b'\x00':"Banshee",
-    b'\x01':"Tidal Blade",
-    b'\x02':"Rad Hazzard",
-    b'\x03':"Miss Behave",
-    b'\x04':"Damn the Torpedoes",
-    b'\x05':"Cutthroat",
-    b'\x06':"Razorback",
-    b'\x07':"Thresher",
-    b'\x08':"Midway",
-    b'\t':"Chumdinger",
-    b'\n':"Armed Response",
-    b'\x0b':"Blowfish",
-    b'\x0c':"Tinytanic"
-}
-
-inverse_boat_lut = {name: boat_id for boat_id, name in boat_LUT.items()}
-
-# Hidden track names extracted from disk image offset 0xAC6F860 (archive.org-HydroThunder-1.00d.img) [CRC32: 39205D83]
-# Data at offset also suggests possibly another removed track "T.TWAT1" (no high score data for it)
-track_order={
-    0:"Ship Graveyard",
-    10:"Lost Island",
-    20:"Venice Canals",
-    30:"Lake Powell",
-    40:"Arctic Circle",
-    50:"Nile Adventure",
-    60:"N.Y. Disaster",
-    70:"Greek Isles",
-    80:"The Far East",
-    90:"TEST",
-    100:"Thunder Park",
-    110:"Hydro Speedway",
-    120:"LOOP3",
-    130:"End"
+class ht:
+    boats={
+        b'\x00':"Banshee",
+        b'\x01':"Tidal Blade",
+        b'\x02':"Rad Hazzard",
+        b'\x03':"Miss Behave",
+        b'\x04':"Damn the Torpedoes",
+        b'\x05':"Cutthroat",
+        b'\x06':"Razorback",
+        b'\x07':"Thresher",
+        b'\x08':"Midway",
+        b'\t':"Chumdinger",
+        b'\n':"Armed Response",
+        b'\x0b':"Blowfish",
+        b'\x0c':"Tinytanic"
     }
+    iboats = {name: boat_id for boat_id, name in boats.items()}
+
+    
+    tracks={
+        0:"Ship Graveyard",
+        10:"Lost Island",
+        20:"Venice Canals",
+        30:"Lake Powell",
+        40:"Arctic Circle",
+        50:"Nile Adventure",
+        60:"N.Y. Disaster",
+        70:"Greek Isles",
+        80:"The Far East",
+        90:"TEST - Not Accessible",
+        100:"Thunder Park",
+        110:"Hydro Speedway",
+        120:"Castle Von Dandy - Not Accessible",
+        130:"End"
+    }
+
+    class data:
+        start_offset = [530432,333824] # In bytes from true end of drive
+        size = 8192 # Rough size rounded up to nice number
+        header = bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe') # Always present
+        checksum_offset = 12 # Bytes from data start to checksum
+        checksum_seed=0xFEDCBA94 + 1 # +1 to LSB for now until better understood
+        config_offset=20
+        times_offset=380
+        split=offset=1424
+        audit_offset=1684
+
+
+if args.boats:
+    for boat in ht.iboats:
+        print(boat)
+    sys.exit(0)
+
+
+if args.map_names:
+    for key, track in ht.tracks.items():
+        print(track)
+    sys.exit(0)
+
+
+class Drive:
+    # Object for wrapping a drive, disk image, or raw data block
+    def __init__(self, filename):
+        self.filename = str(filename) # May be filepath, drive block device, or raw
+        self.size = int(os.path.getsize(self.filename))
+        self.raw = False if self.size > ht.data.size else True
+
+        self.blocks = [ self.size - ht.data.start_offset[0] if not self.raw else 0 ,
+                self.size - ht.data.start_offset[1] if not self.raw else 0]
+
+    def read_times(self):
+        times=None
+
+
+def checksum_calc(drive):
+    with open(drive.filename, "rb") as f:
+        f.seek(drive.blocks[args.block])
+        header = f.read(8)
+
+        if (header == ht.data.header):
+            print("PASS : Found [{}] @ {}".format(header.hex(' '), hex(drive.blocks[args.block])))
+
+        f.read(4)
+        checksum_stored=f.read(4)
+        f.read(4)
+
+        checksum=ht.data.checksum_seed
+        int_read=int(ht.data.size/4)
+        for count in range(int_read):
+            next_int_bytes = f.read(4)
+            next_int = int.from_bytes(next_int_bytes, "little", signed=False)
+            checksum = (checksum+next_int) % 0xFFFFFFFF # Use mask to force overflow
+        
+        print("Checksum:")
+        print("Found: {}".format(checksum_stored.hex(" ")))
+        print("Sumed: {}".format(checksum.to_bytes(4,"little", signed=False).hex(" ")))
+
+        return checksum.to_bytes(4,"little", signed=False).hex(" ")
+
+
+
+
+if args.read is not None:
+    read_drive = Drive(args.read)
+
+    # Add else to use write drive as read if data CSV provided
+else:
+    read_drive = None
+
+if args.write_raw is not None:
+    write_filename=args.write_raw
+    with open(read_drive.filename, "rb") as r:
+        with open(write_filename, "wb") as w:
+
+            # Seek to block
+            r.seek(read_drive.blocks[args.block])
+            print("Reading: {}".format(hex(read_drive.blocks[args.block])))
+            for position in range(ht.data.size):
+                # Add options to replace data from CSV based on position
+                w.write(r.read(1))
+
+    
+
+
+
+sys.exit(0)
 
 time = ""
 for score_pos in scores_start:

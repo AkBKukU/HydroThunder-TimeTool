@@ -14,7 +14,7 @@ memory like that, it only exists on the hard drive.
 
 The position of this starts at 1,036 512 byte sectors (530,432 bytes total) from
 the end of the drive. There does not seem to be a definitive end to the data, 
-possibly due to the structure. It does fit within 65,536 bytes comfortably. 
+possibly due to the structure. It does fit within 8,192 bytes comfortably. 
 There is a second identical *type* of data 384 sectors after the first set. 
 Based on how the machine works, these are redundant sets of data that are
 written either sequentially to be identical or alternating in case the machine 
