@@ -47,7 +47,16 @@ def btime(time_bytes):
     return str(datetime.timedelta( seconds=round(struct.unpack('<f', time_bytes)[0],2) ))[2:][:8]
 
 def timeb(time_seconds):
-    return struct.pack('<f', (datetime.datetime.strptime(time_seconds, "%M:%S.%f") - datetime.datetime(1900,1,1)).total_seconds())
+    return struct.pack('<f', (datetime.datetime.strptime(time_seconds.strip(), "%M:%S.%f") - datetime.datetime(1900,1,1)).total_seconds())
+
+def get_file_size(filename):
+    "Get the file size by seeking at end"
+    fd= os.open(filename, os.O_RDONLY)
+    try:
+        return os.lseek(fd, 0, os.SEEK_END)
+    finally:
+        os.close(fd)
+
 
 class ht:
     boats={
@@ -122,11 +131,14 @@ class Drive:
     # Object for wrapping a drive, disk image, or raw data block
     def __init__(self, filename):
         self.filename = str(filename) # May be filepath, drive block device, or raw
-        self.size = int(os.path.getsize(self.filename))
+        self.size = int(get_file_size(self.filename))
         self.raw = False if self.size > ht.data.size else True
 
         self.blocks = [ self.size - ht.data.start_offset[0] if not self.raw else 0 ,
                 self.size - ht.data.start_offset[1] if not self.raw else 0]
+
+        print ("Reading drive: {}\nSize: {}\nRaw: {}\nBlock Addr: {}".format(
+            self.filename,self.size,self.raw,self.blocks[args.block]))
         self.times = None
         self.time_bytes = None
         self.splits = None
@@ -261,9 +273,13 @@ def checksum_calc(drive):
             next_int_bytes = f.read(4)
             next_int = int.from_bytes(next_int_bytes, "little", signed=False)
             checksum = (checksum+next_int) % 0xFFFFFFFF # Use mask to force overflow
-            parity = parity+next_int % 0x1# Use mask to force overflow
-        
-        checksum = (checksum % 0xFFFFFFFe) + parity # Use mask to set parity bit
+            #parity = parity+(next_int % 0x1)# Use mask to force overflow
+            if next_int % 2 == 0:
+                parity = not(parity)
+
+        if checksum % 2 == 0:
+            parity = not(parity)
+        checksum = (checksum % 0xFFFFFFFe) + (parity) # Use mask to set parity bit
 
         f.seek(drive.blocks[args.block]+ht.data.checksum_offset)
         f.write(checksum.to_bytes(4,"little", signed=False))
@@ -287,24 +303,27 @@ read_drive = None
 write_drive = None
 
 if args.write is not None:
+    print("Init Write: {}".format(args.write))
     write_drive = Drive(args.write)
     if args.read is None:
+        print("Init Read: {}".format(args.write))
         read_drive = Drive(args.write)
 else:
     write_drive = None
 
 if args.read is not None or args.write is not None:
     if read_drive is None:
+        print("Init Read: {}".format(args.read))
         read_drive = Drive(args.read)
     read_drive.read_times()
     read_drive.read_splits()
 
-    if (args.times is not None) and ((args.write is not None) and (args.write_raw is not None)):
+    if (args.times is not None) and (args.write is None) and (args.write_raw is None):
         csv_write(read_drive.times, ["Track", "Initials","Boat","Timestamp"], args.times)
     elif args.times is not None:
         read_drive.load_times(args.times)
 
-    if args.splits is not None and (args.write is not None and args.write_raw is not None):
+    if args.splits is not None and (args.write is None and args.write_raw is None):
         csv_write(read_drive.splits, ["Track","Split 1","Split 2","Split 3","Split 4","Split 5"], args.splits)
     elif args.splits is not None:
         read_drive.load_splits(args.splits)
