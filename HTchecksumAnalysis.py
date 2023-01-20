@@ -32,8 +32,9 @@ checksum_offsets = [0x75BE66F, 			# Checksum suspected to be for operator settin
 					]
 
 checksum_endian = 'little'
-checksum_seed = 0x00000000
-checksum_seed = 0xFEDCBA94 # Result of of -0x0123456b
+#checksum_seed = 0x00000000
+#checksum_seed = 0xFEDCBA94 # Result of of -0x0123456b
+checksum_seed = cmos.checksum.seed
 
 # ==============================================================================
 
@@ -55,6 +56,8 @@ diff_midway_my_checksums = []
 
 cmos_image_consistent = []
 cmos_image_paths_consistent = []
+
+num_valid_checksums = 0
 
 for cmos_image_idx in range(len(cmos_image_paths)):
 	print("\n\n {:3d} [{}]".format(cmos_image_idx, cmos_image_paths[cmos_image_idx]))
@@ -81,29 +84,35 @@ for cmos_image_idx in range(len(cmos_image_paths)):
 	first_checksum_bin = "{:032b}".format(first_checksum_int)
 	second_checksum_bin = "{:032b}".format(second_checksum_int)
 	diff_checksum_bin = "{:032b}".format(abs(diff_checksum_int))
+	diff_my_checksum_bin = "{:032b}".format(abs(midway_my_checksum_int))
 	
 	print("Checksum for first cmos copy     : {} | {} {}".format(first_checksums[cmos_image_idx].hex(' '), first_cmos_checksum.hex(' '), first_checksum_bin))
 	print("Checksum for second cmos copy    : {} | {} {}".format(second_checksums[cmos_image_idx].hex(' '), second_cmos_checksum.hex(' '), second_checksum_bin))
 	print("Checksum abs diff between copies : {} | {} {}".format(diff_checksums[cmos_image_idx].hex(' '), diff_cmos_checksums[cmos_image_idx].hex(' '), diff_checksum_bin), end='')
 	
 	if diff_checksum_int > 0:
-		print(" HIGHER CHECKSUM  <--")
+		print(" HIGHER CHECKSUM")
 		cmos_image_consistent.append(False)
 	elif diff_checksum_int < 0:
-		print(" LOWER CHECKSUM   <--")
+		print(" LOWER CHECKSUM")
 		cmos_image_consistent.append(False)
 	else:
-		print(" NO DIFF, CMOS AREAS IDENTICAL")
+		print(" IDENTICAL CHECKSUM")
 		cmos_image_consistent.append(True)
 		cmos_image_paths_consistent.append(cmos_image_paths[cmos_image_idx])
 		
-	print("Checksum abs diff between midway :               {}".format(diff_midway_my_checksums[cmos_image_idx].hex(' '), end=''), end='')
+	print("Checksum abs diff between midway :               {} {}".format(diff_midway_my_checksums[cmos_image_idx].hex(' '), diff_my_checksum_bin), end='')
 	
 	if midway_my_checksum_int == 0:
-		print(" Valid Checksum!", end='')
+		print(" Valid Checksums!", end='')
+		num_valid_checksums += 1
+	else:
+		print(" INVALID Checksums! -----------------", end='')
+	
+success_rate = num_valid_checksums/len(cmos_image_paths)
 	
 print("\n                                 |  Midway's   | My checksum")
-print("                                 |  Checksum   | {} {} {}".format('SUM32', checksum_endian, checksum_seed))
+print("                                 |  Checksum   | {} | {} | {} | {:3.0f}% of Checksums Match ({})".format('SUM32', checksum_endian, checksum_seed.to_bytes(4, checksum_endian, signed=False).hex(' '), success_rate*100, num_valid_checksums))
 
 
 # List of image files with all the ones with inconsistent "checksums" removed

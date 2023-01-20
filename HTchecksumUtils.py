@@ -25,7 +25,9 @@ class cmos:
 		algorithm		= 'SUM32'													# Checksum algorithm used
 		endian			= 'little'													# Endian that determines how bytes are summed
 		rel_offset 		= 0xC														# First bit of the checksum  relative to base_offset
-		seed 			= 0xFEDCBA94 # Result of of -0x0123456b						# Seed of the checksum algorithm
+		seed 			= 0xFEDCBA94 # Result of of -0x0123456b						# Seed of the checksum algorithm (this is just the sum of the static header, including it as a seed means we don't have to overwrite the checksum to recalculate it)
+	class parity:
+		seed 			= False														# Start condition of the parity check state after the header but excluding the checksum
 	
 
 def verifyImageHeaders(image_path_list, cmos_img_offset = cmos.base_offsets[0]):
@@ -106,6 +108,7 @@ def calculateChecksum(image_path, checksum_start_offset = (cmos.base_offsets[0] 
 			
 	checksum_seed = checksum_seed % checksum_mask
 	checksum_length_reads = int(checksum_length_reads)
+	parity_bit = cmos.parity.seed
 			
 	with open(image_path, "rb") as f_s:						
 		f_s.seek(checksum_start_offset)
@@ -120,12 +123,26 @@ def calculateChecksum(image_path, checksum_start_offset = (cmos.base_offsets[0] 
 			checksum_sum = (this_byte_int + checksum_sum) % checksum_mask
 			checksum_sum_bytes = checksum_sum.to_bytes(checksum_byte_width,checksum_endian, signed=False)
 			
+			# Calculate parity of each byte
+			if this_byte_int % 2 == 0:
+				parity_bit = not(parity_bit)
+				
+			
 		checksum_end_offset = f_s.tell() - 1
 			
 	if DEBUG:
 		print("\n" + checksum_algorithm + " | 0x" + checksum_start_offset.to_bytes(4,checksum_endian).hex() + " → 0x" + (checksum_end_offset).to_bytes(4,checksum_endian).hex() + " |  " + "{:10d}".format(num_sums) + " |  " + this_byte.hex(' ') + "  | " + checksum_sum_bytes.hex(' ') + " | ")
 			
 	last_byte = this_byte
+	
+	# Add the parity of the checksum as well
+	if checksum_sum % 2 == 0:
+		parity_bit = not(parity_bit)
+	
+	# Replace the last bit of the checksum with the parity bit
+	checksum_sum = checksum_sum % (checksum_mask - 1)
+	checksum_sum += parity_bit
+	checksum_sum_bytes = checksum_sum.to_bytes(checksum_byte_width,checksum_endian, signed=False)
 			
 	return checksum_sum_bytes, checksum_start_offset, checksum_end_offset, num_sums, last_byte
 
