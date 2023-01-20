@@ -25,7 +25,7 @@ parser.add_argument('-c', '--config',
                     help='Configuration options and calibration data')
 parser.add_argument('-r', '--read', default=None,
                     help='Drive or image to read from')
-parser.add_argument('-w', '--write',
+parser.add_argument('-w', '--write', default=None,
                     help='Write data to provided drive or image')
 parser.add_argument('--block', default=0,choices=[0,1], type=int,
                     help='Override which data block to read')
@@ -91,12 +91,11 @@ class ht:
         header = bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe') # Always present
         checksum_offset = 12 # Bytes from data start to checksum
         checksum_seed=0xFEDCBA94 + args.lsb_offset
+        section_bytes={"header":12,"checksum":4,"static1":4,"config":360,"times":1040,"static2":4,"splits":260,"audit":6508}
         config_offset=20
         times_offset=380
-        times_bytes=1040
         time_count=130
         split_offset=1424
-        split_bytes=260
         split_count=13
         audit_offset=1684
 
@@ -129,9 +128,9 @@ class Drive:
         self.blocks = [ self.size - ht.data.start_offset[0] if not self.raw else 0 ,
                 self.size - ht.data.start_offset[1] if not self.raw else 0]
         self.times = None
-        self.time_bytes = None
+        self.time_bytess = None
         self.splits = None
-        self.split_btyes = None
+        self.split_bytes = None
 
     def read_times(self):
         self.times=[]
@@ -160,6 +159,7 @@ class Drive:
             for row in reader:
                 self.times.append(row)
 
+        self.byte_times()
         #print(str(self.times))
 
     def byte_times(self):
@@ -173,7 +173,7 @@ class Drive:
             self.time_bytes+=timeb(row["Timestamp"])
         
         return self.time_bytes
-        #print(self.time_bytes.hex(" "))
+        print(self.time_bytes.hex(" "))
 
     def read_splits(self):
         self.splits=[]
@@ -199,6 +199,7 @@ class Drive:
             for row in reader:
                 self.splits.append(row)
 
+        self.byte_splits()
         #print(str(self.splits))
 
     def byte_splits(self):
@@ -215,6 +216,33 @@ class Drive:
  
         return self.split_bytes
         #print(self.split_bytes.hex(" "))
+
+    def write(self,update):
+        with open(read_drive.filename, "rb") as r:
+            with open(self.filename, "r+b") as w:
+                # Seek to block
+                r.seek(read_drive.blocks[args.block])
+                w.seek(write_drive.blocks[args.block])
+                print("Writing at: ".format(hex(write_drive.blocks[args.block])))
+                for section, byte_count in ht.data.section_bytes.items():
+                    if section == "times":
+                        if read_drive.time_bytes is not None:
+                            w.write(read_drive.time_bytes)
+                            r.seek(byte_count,1)
+                        else:
+                            print("Using bin data")
+                            w.write(r.read(byte_count))
+                    elif section == "splits":
+                        if read_drive.split_bytes is not None:
+                            w.write(read_drive.split_bytes)
+                            r.seek(byte_count,1)
+                        else:
+                            print("Using bin data")
+                            w.write(r.read(byte_count))
+                    else:
+                        w.write(r.read(byte_count))
+
+
 
 
 def checksum_calc(drive):
@@ -271,12 +299,12 @@ if args.read is not None or args.write is not None:
     read_drive.read_times()
     read_drive.read_splits()
 
-    if args.times is not None and args.write is None:
+    if (args.times is not None) and ((args.write is not None) and (args.write_raw is not None)):
         csv_write(read_drive.times, ["Track", "Initials","Boat","Timestamp"], args.times)
     elif args.times is not None:
         read_drive.load_times(args.times)
 
-    if args.splits is not None and args.write is None:
+    if args.splits is not None and (args.write is not None and args.write_raw is not None):
         csv_write(read_drive.splits, ["Track","Split 1","Split 2","Split 3","Split 4","Split 5"], args.splits)
     elif args.splits is not None:
         read_drive.load_splits(args.splits)
@@ -288,32 +316,60 @@ else:
 bytes_times = read_drive.byte_times()
 bytes_splits = read_drive.byte_splits()
 
-print(str(bytes_splits[0]))
-#if args.write is not None:
 
+if args.write is not None:
+    write_drive.write(read_drive)
+    checksum_calc(write_drive)
 
 if args.write_raw is not None:
     write_filename=args.write_raw
-    if os.path.isfile(write_filename):
-        # Update existing file
-        with open(read_drive.filename, "rb") as r:
-            with open(write_filename, "r+b") as w:
-                #TODO - Add update file in place with minimal writes
-    else:
+#    if os.path.isfile(write_filename):
+#        # Update existing file
+#        with open(read_drive.filename, "rb") as r:
+#            with open(write_filename, "r+b") as w:
+#                #TODO - Add update file in place with minimal writes
+#                print("nope")
+#    else:
         # Write new file
-        with open(read_drive.filename, "rb") as r:
-            with open(write_filename, "wb") as w:
+    with open(read_drive.filename, "rb") as r:
+        with open(write_filename, "wb") as w:
+            # Seek to block
+            r.seek(read_drive.blocks[args.block])
 
-                # Seek to block
-                r.seek(read_drive.blocks[args.block])
-                print("Reading: {}".format(hex(read_drive.blocks[args.block])))
-                w.write(r.read(ht.data.size))
+            for section, byte_count in ht.data.section_bytes.items():
+                if section == "times":
+                    w.write(bytes_times)
+                    r.seek(byte_count,1)
+                elif section == "splits":
+                    w.write(bytes_splits)
+                    r.seek(byte_count,1)
+                else:
+                    w.write(r.read(byte_count))
+
+
 
     checksum_calc(Drive(write_filename))
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 sys.exit(0)
+
+
+
 
 time = ""
 for score_pos in scores_start:
