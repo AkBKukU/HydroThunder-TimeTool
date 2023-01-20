@@ -99,7 +99,7 @@ class ht:
         size = 8192 # Rough size rounded up to nice number
         header = bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe') # Always present
         checksum_offset = 12 # Bytes from data start to checksum
-        checksum_seed=0xFEDCBA94 + args.lsb_offset
+        checksum_seed=0xFEDCBA94
         section_bytes={"header":12,"checksum":4,"static1":4,"config":360,"times":1040,"static2":4,"splits":260,"audit":6508}
         config_offset=20
         times_offset=380
@@ -279,7 +279,7 @@ def checksum_calc(drive):
 
         if checksum % 2 == 0:
             parity = not(parity)
-        checksum = (checksum % 0xFFFFFFFe) + (parity) # Use mask to set parity bit
+        checksum = (checksum % 0xFFFFFFFe) + (parity)  + args.lsb_offset# Use mask to set parity bit
 
         f.seek(drive.blocks[args.block]+ht.data.checksum_offset)
         f.write(checksum.to_bytes(4,"little", signed=False))
