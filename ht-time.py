@@ -37,7 +37,7 @@ parser.add_argument('-b', '--boats',action='store_true',
                     help='List boat names in game\'s stored order')
 parser.add_argument('-m', '--map_names',action='store_true',
                     help='List track names in game\'s stored order')
-parser.add_argument('--lsb_offset', default=1, type=int,
+parser.add_argument('--lsb_offset', default=0, type=int,
                     help='Fine tune checksum LSB value which can slightly vary')
 # Run argument parsing
 args = parser.parse_args()
@@ -128,7 +128,7 @@ class Drive:
         self.blocks = [ self.size - ht.data.start_offset[0] if not self.raw else 0 ,
                 self.size - ht.data.start_offset[1] if not self.raw else 0]
         self.times = None
-        self.time_bytess = None
+        self.time_bytes = None
         self.splits = None
         self.split_bytes = None
 
@@ -173,7 +173,7 @@ class Drive:
             self.time_bytes+=timeb(row["Timestamp"])
         
         return self.time_bytes
-        print(self.time_bytes.hex(" "))
+        #print(self.time_bytes.hex(" "))
 
     def read_splits(self):
         self.splits=[]
@@ -223,21 +223,18 @@ class Drive:
                 # Seek to block
                 r.seek(read_drive.blocks[args.block])
                 w.seek(write_drive.blocks[args.block])
-                print("Writing at: ".format(hex(write_drive.blocks[args.block])))
                 for section, byte_count in ht.data.section_bytes.items():
                     if section == "times":
                         if read_drive.time_bytes is not None:
                             w.write(read_drive.time_bytes)
                             r.seek(byte_count,1)
                         else:
-                            print("Using bin data")
                             w.write(r.read(byte_count))
                     elif section == "splits":
                         if read_drive.split_bytes is not None:
                             w.write(read_drive.split_bytes)
                             r.seek(byte_count,1)
                         else:
-                            print("Using bin data")
                             w.write(r.read(byte_count))
                     else:
                         w.write(r.read(byte_count))
@@ -247,24 +244,27 @@ class Drive:
 
 def checksum_calc(drive):
     with open(drive.filename, "r+b") as f:
-        print(drive.blocks[args.block])
         f.seek(drive.blocks[args.block])
         header = f.read(8)
 
-        if (header == ht.data.header):
-            print("PASS : Found [{}] @ {}".format(header.hex(' '), hex(drive.blocks[args.block])))
+        if (header != ht.data.header):
+            print("ERROR: Bad header [{}] @ {}".format(header.hex(' '), hex(drive.blocks[args.block])))
 
         f.read(4)
         checksum_stored=f.read(4)
         f.read(4)
 
         checksum=ht.data.checksum_seed
+        parity=0
         int_read=int(ht.data.size/4)
         for count in range(int_read):
             next_int_bytes = f.read(4)
             next_int = int.from_bytes(next_int_bytes, "little", signed=False)
             checksum = (checksum+next_int) % 0xFFFFFFFF # Use mask to force overflow
+            parity = parity+next_int % 0x1# Use mask to force overflow
         
+        checksum = (checksum % 0xFFFFFFFe) + parity # Use mask to set parity bit
+
         f.seek(drive.blocks[args.block]+ht.data.checksum_offset)
         f.write(checksum.to_bytes(4,"little", signed=False))
 
@@ -313,8 +313,8 @@ if args.read is not None or args.write is not None:
 else:
     read_drive = None
 
-bytes_times = read_drive.byte_times()
-bytes_splits = read_drive.byte_splits()
+#bytes_times = read_drive.byte_times()
+#bytes_splits = read_drive.byte_splits()
 
 
 if args.write is not None:
@@ -335,17 +335,21 @@ if args.write_raw is not None:
         with open(write_filename, "wb") as w:
             # Seek to block
             r.seek(read_drive.blocks[args.block])
-
             for section, byte_count in ht.data.section_bytes.items():
                 if section == "times":
-                    w.write(bytes_times)
-                    r.seek(byte_count,1)
+                    if read_drive.time_bytes is not None:
+                        w.write(read_drive.time_bytes)
+                        r.seek(byte_count,1)
+                    else:
+                        w.write(r.read(byte_count))
                 elif section == "splits":
-                    w.write(bytes_splits)
-                    r.seek(byte_count,1)
+                    if read_drive.split_bytes is not None:
+                        w.write(read_drive.split_bytes)
+                        r.seek(byte_count,1)
+                    else:
+                        w.write(r.read(byte_count))
                 else:
                     w.write(r.read(byte_count))
-
 
 
     checksum_calc(Drive(write_filename))
