@@ -49,6 +49,6 @@ for this_cmos_copy in range(len(cmos_base_offsets)):
 	area_checksum_result, area_start_offset, area_end_offset, num_sums, last_byte = calculateChecksum(image_path, cmos_base_offsets[this_cmos_copy] + area_rel_offset)
 	checksums_new.append(area_checksum_result)
 		
-	print("CMOS area #{:1d} Checksum @ {} | {:12s} | {:12s} | {} → {} ".format(this_cmos_copy, hex(checksum_abs_offset), checksums_old[this_cmos_copy].hex(' '), checksums_new[this_cmos_copy].hex(' '), hex(area_start_offset), hex(area_end_offset)))
+	print("CMOS area #{:1d} Checksum @ {:9s} | {:12s} | {:12s} | {} → {} ".format(this_cmos_copy, hex(checksum_abs_offset), checksums_old[this_cmos_copy].hex(' '), checksums_new[this_cmos_copy].hex(' '), hex(area_start_offset), hex(area_end_offset)))
 	
 print()
