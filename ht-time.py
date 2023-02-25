@@ -7,6 +7,7 @@ import struct
 import datetime
 import csv
 import argparse
+import math
 
 parser = argparse.ArgumentParser(
     prog = 'Hydro Thunder Time Tool',
@@ -99,7 +100,7 @@ class ht:
         size = 8192 # Rough size rounded up to nice number
         header = bytearray(b'\x01\x00\x00\x00\x98\xba\xdc\xfe') # Always present
         checksum_offset = 12 # Bytes from data start to checksum
-        checksum_seed=0xFEDCBA94
+        checksum_seed=0xFEDCBAF2
         section_bytes={"header":12,"checksum":4,"static1":4,"config":360,"times":1040,"static2":4,"splits":260,"audit":6508}
         config_offset=20
         times_offset=380
@@ -272,13 +273,19 @@ def checksum_calc(drive):
         for count in range(int_read):
             next_int_bytes = f.read(4)
             next_int = int.from_bytes(next_int_bytes, "little", signed=False)
-            checksum = (checksum+next_int) % 0xFFFFFFFF # Use mask to force overflow
+            checksum = (checksum+next_int)
             #parity = parity+(next_int % 0x1)# Use mask to force overflow
             if next_int % 2 == 0:
                 parity = not(parity)
-
+        
+        # Simulate overflows for uint32 type
+        num_overflows = math.floor(checksum / 0xFFFFFFFF)
+        checksum = checksum - (num_overflows)
+        checksum = checksum % 0xFFFFFFFF
+        
         if checksum % 2 == 0:
             parity = not(parity)
+        
         checksum = (checksum % 0xFFFFFFFe) + (parity)  + args.lsb_offset# Use mask to set parity bit
 
         f.seek(drive.blocks[args.block]+ht.data.checksum_offset)
