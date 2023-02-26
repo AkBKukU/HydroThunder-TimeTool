@@ -274,14 +274,12 @@ def checksum_calc(drive):
             next_int_bytes = f.read(4)
             next_int = int.from_bytes(next_int_bytes, "little", signed=False)
             checksum = (checksum+next_int)
+            # Simulate overflows for uint32 type
+            if checksum > 0xFFFFFFFF:
+                checksum = (checksum % 0xFFFFFFFF) - 1
             #parity = parity+(next_int % 0x1)# Use mask to force overflow
             if next_int % 2 == 0:
                 parity = not(parity)
-        
-        # Simulate overflows for uint32 type
-        num_overflows = math.floor(checksum / 0xFFFFFFFF)
-        checksum = checksum - (num_overflows)
-        checksum = checksum % 0xFFFFFFFF
         
         if checksum % 2 == 0:
             parity = not(parity)
