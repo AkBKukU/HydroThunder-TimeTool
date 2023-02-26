@@ -7,7 +7,6 @@ import struct
 import datetime
 import csv
 import argparse
-import math
 
 parser = argparse.ArgumentParser(
     prog = 'Hydro Thunder Time Tool',
@@ -284,7 +283,7 @@ def checksum_calc(drive):
         if checksum % 2 == 0:
             parity = not(parity)
         
-        checksum = (checksum % 0xFFFFFFFe) + (parity)  + args.lsb_offset# Use mask to set parity bit
+        checksum = checksum + parity + args.lsb_offset# Use mask to set parity bit
 
         f.seek(drive.blocks[args.block]+ht.data.checksum_offset)
         f.write(checksum.to_bytes(4,"little", signed=False))
